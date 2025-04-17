@@ -1,0 +1,1233 @@
+{
+  "id": "c450837b-fe36-44ef-bfc0-8b8c92268d06",
+  "revision": 0,
+  "last_node_id": 34,
+  "last_link_id": 58,
+  "nodes": [
+    {
+      "id": 22,
+      "type": "LoadModules",
+      "pos": [
+        -391.7568664550781,
+        1442.356689453125
+      ],
+      "size": [
+        315,
+        58
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "inference_args",
+          "type": "INFERENCE_ARGS",
+          "link": 53
+        }
+      ],
+      "outputs": [
+        {
+          "name": "modules",
+          "type": "MODULES",
+          "slot_index": 0,
+          "links": [
+            24
+          ]
+        }
+      ],
+      "title": "tokenizer",
+      "properties": {
+        "Node name for S&R": "LoadModules"
+      },
+      "widgets_values": [
+        "tokenizer"
+      ]
+    },
+    {
+      "id": 25,
+      "type": "LoadModules",
+      "pos": [
+        126.17420196533203,
+        604.92626953125
+      ],
+      "size": [
+        315,
+        58
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "inference_args",
+          "type": "INFERENCE_ARGS",
+          "link": 44
+        }
+      ],
+      "outputs": [
+        {
+          "name": "modules",
+          "type": "MODULES",
+          "slot_index": 0,
+          "links": [
+            19,
+            31
+          ]
+        }
+      ],
+      "title": "transformer",
+      "properties": {
+        "Node name for S&R": "LoadModules"
+      },
+      "widgets_values": [
+        "transformer"
+      ]
+    },
+    {
+      "id": 9,
+      "type": "LatentPreparationStage",
+      "pos": [
+        1388.6781005859375,
+        842.1530151367188
+      ],
+      "size": [
+        355.20001220703125,
+        66
+      ],
+      "flags": {},
+      "order": 14,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "forward_batch",
+          "type": "FORWARD_BATCH",
+          "link": 6
+        },
+        {
+          "name": "inference_args",
+          "type": "INFERENCE_ARGS",
+          "link": 50
+        },
+        {
+          "name": "scheduler",
+          "type": "MODULES",
+          "link": 37
+        }
+      ],
+      "outputs": [
+        {
+          "name": "forward_batch",
+          "type": "FORWARD_BATCH",
+          "slot_index": 0,
+          "links": [
+            9
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LatentPreparationStage"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 10,
+      "type": "DenoisingStage",
+      "pos": [
+        1822.8624267578125,
+        1090.5718994140625
+      ],
+      "size": [
+        355.20001220703125,
+        86
+      ],
+      "flags": {},
+      "order": 15,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "forward_batch",
+          "type": "FORWARD_BATCH",
+          "link": 9
+        },
+        {
+          "name": "inference_args",
+          "type": "INFERENCE_ARGS",
+          "link": 57
+        },
+        {
+          "name": "scheduler",
+          "type": "MODULES",
+          "link": 26
+        },
+        {
+          "name": "transformer",
+          "type": "MODULES",
+          "link": 31
+        }
+      ],
+      "outputs": [
+        {
+          "name": "forward_batch",
+          "type": "FORWARD_BATCH",
+          "slot_index": 0,
+          "links": [
+            10
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "DenoisingStage"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 12,
+      "type": "DecodingStage",
+      "pos": [
+        1821.670654296875,
+        1321.0775146484375
+      ],
+      "size": [
+        355.20001220703125,
+        66
+      ],
+      "flags": {},
+      "order": 16,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "forward_batch",
+          "type": "FORWARD_BATCH",
+          "link": 10
+        },
+        {
+          "name": "inference_args",
+          "type": "INFERENCE_ARGS",
+          "link": 58
+        },
+        {
+          "name": "vae",
+          "type": "MODULES",
+          "link": 39
+        }
+      ],
+      "outputs": [
+        {
+          "name": "forward_batch",
+          "type": "FORWARD_BATCH",
+          "slot_index": 0,
+          "links": [
+            11
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "DecodingStage"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 16,
+      "type": "VideoOutputsToFrames",
+      "pos": [
+        2252.862548828125,
+        859.118896484375
+      ],
+      "size": [
+        315,
+        106
+      ],
+      "flags": {},
+      "order": 17,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "forward_batch",
+          "type": "FORWARD_BATCH",
+          "link": 11
+        }
+      ],
+      "outputs": [
+        {
+          "name": "frames",
+          "type": "IMAGE",
+          "slot_index": 0,
+          "links": [
+            40
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VideoOutputsToFrames"
+      },
+      "widgets_values": [
+        "outputs/",
+        "A scenic mountain landscape",
+        24
+      ]
+    },
+    {
+      "id": 26,
+      "type": "LoadModules",
+      "pos": [
+        1332.9683837890625,
+        506.8299560546875
+      ],
+      "size": [
+        315,
+        58
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "inference_args",
+          "type": "INFERENCE_ARGS",
+          "link": 49
+        }
+      ],
+      "outputs": [
+        {
+          "name": "modules",
+          "type": "MODULES",
+          "slot_index": 0,
+          "links": [
+            26,
+            37,
+            38
+          ]
+        }
+      ],
+      "title": "scheduler",
+      "properties": {
+        "Node name for S&R": "LoadModules"
+      },
+      "widgets_values": [
+        "scheduler"
+      ]
+    },
+    {
+      "id": 15,
+      "type": "CLIPTextEncodingStage",
+      "pos": [
+        249.404296875,
+        1179.0399169921875
+      ],
+      "size": [
+        355.20001220703125,
+        86
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "forward_batch",
+          "type": "FORWARD_BATCH",
+          "link": 3
+        },
+        {
+          "name": "inference_args",
+          "type": "INFERENCE_ARGS",
+          "link": 51
+        },
+        {
+          "name": "text_encoder_2",
+          "type": "MODULES",
+          "link": 30
+        },
+        {
+          "name": "tokenizer_2",
+          "type": "MODULES",
+          "link": 29
+        }
+      ],
+      "outputs": [
+        {
+          "name": "forward_batch",
+          "type": "FORWARD_BATCH",
+          "slot_index": 0,
+          "links": [
+            4
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CLIPTextEncodingStage"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 20,
+      "type": "LoadModules",
+      "pos": [
+        465.4366149902344,
+        1502.6644287109375
+      ],
+      "size": [
+        315,
+        58
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "inference_args",
+          "type": "INFERENCE_ARGS",
+          "link": 55
+        }
+      ],
+      "outputs": [
+        {
+          "name": "modules",
+          "type": "MODULES",
+          "slot_index": 0,
+          "links": [
+            30
+          ]
+        }
+      ],
+      "title": "text_encoder_2",
+      "properties": {
+        "Node name for S&R": "LoadModules"
+      },
+      "widgets_values": [
+        "text_encoder_2"
+      ]
+    },
+    {
+      "id": 24,
+      "type": "LoadModules",
+      "pos": [
+        1045.652587890625,
+        1483.750244140625
+      ],
+      "size": [
+        315,
+        58
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "inference_args",
+          "type": "INFERENCE_ARGS",
+          "link": 56
+        }
+      ],
+      "outputs": [
+        {
+          "name": "modules",
+          "type": "MODULES",
+          "slot_index": 0,
+          "links": [
+            17,
+            39
+          ]
+        }
+      ],
+      "title": "vae",
+      "properties": {
+        "Node name for S&R": "LoadModules"
+      },
+      "widgets_values": [
+        "vae"
+      ]
+    },
+    {
+      "id": 29,
+      "type": "CreateForwardBatchNode",
+      "pos": [
+        -513.3704223632812,
+        206.4686279296875
+      ],
+      "size": [
+        400,
+        200
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "inference_args",
+          "type": "INFERENCE_ARGS",
+          "link": 42
+        }
+      ],
+      "outputs": [
+        {
+          "name": "forward_batch",
+          "type": "FORWARD_BATCH",
+          "slot_index": 0,
+          "links": [
+            15
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CreateForwardBatchNode"
+      },
+      "widgets_values": [
+        "Will Smith casually eats noodles, his relaxed demeanor contrasting with the energetic background of a bustling street food market. The scene captures a mix of humor and authenticity. Mid-shot framing, vibrant lighting.",
+        "",
+        1,
+        77
+      ]
+    },
+    {
+      "id": 23,
+      "type": "LoadModules",
+      "pos": [
+        -22.98676109313965,
+        1619.90576171875
+      ],
+      "size": [
+        315,
+        58
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "inference_args",
+          "type": "INFERENCE_ARGS",
+          "link": 54
+        }
+      ],
+      "outputs": [
+        {
+          "name": "modules",
+          "type": "MODULES",
+          "slot_index": 0,
+          "links": [
+            29
+          ]
+        }
+      ],
+      "title": "tokenizer_2",
+      "properties": {
+        "Node name for S&R": "LoadModules"
+      },
+      "widgets_values": [
+        "tokenizer_2"
+      ]
+    },
+    {
+      "id": 19,
+      "type": "LoadModules",
+      "pos": [
+        -390.343017578125,
+        1267.54833984375
+      ],
+      "size": [
+        315,
+        58
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "inference_args",
+          "type": "INFERENCE_ARGS",
+          "link": 52
+        }
+      ],
+      "outputs": [
+        {
+          "name": "modules",
+          "type": "MODULES",
+          "slot_index": 0,
+          "links": [
+            21
+          ]
+        }
+      ],
+      "title": "text_encoder",
+      "properties": {
+        "Node name for S&R": "LoadModules"
+      },
+      "widgets_values": [
+        "text_encoder"
+      ]
+    },
+    {
+      "id": 8,
+      "type": "TimestepPreparationStage",
+      "pos": [
+        938.0323486328125,
+        728.134033203125
+      ],
+      "size": [
+        355.20001220703125,
+        66
+      ],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "forward_batch",
+          "type": "FORWARD_BATCH",
+          "link": 5
+        },
+        {
+          "name": "inference_args",
+          "type": "INFERENCE_ARGS",
+          "link": 48
+        },
+        {
+          "name": "scheduler",
+          "type": "MODULES",
+          "link": 38
+        }
+      ],
+      "outputs": [
+        {
+          "name": "forward_batch",
+          "type": "FORWARD_BATCH",
+          "slot_index": 0,
+          "links": [
+            6
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "TimestepPreparationStage"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 31,
+      "type": "HunyuanInferenceArgs",
+      "pos": [
+        -1171.640625,
+        365.6885986328125
+      ],
+      "size": [
+        400,
+        1150
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "inference_args",
+          "type": "INFERENCE_ARGS",
+          "slot_index": 0,
+          "links": [
+            42,
+            43,
+            44,
+            45,
+            46,
+            48,
+            49,
+            50,
+            51,
+            52,
+            53,
+            54,
+            55,
+            56,
+            57,
+            58
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "HunyuanInferenceArgs"
+      },
+      "widgets_values": [
+        "/workspace/FastVideo/data/FastHunyuan-diffusers",
+        false,
+        "",
+        2,
+        1,
+        0,
+        720,
+        1280,
+        117,
+        50,
+        1,
+        0,
+        6,
+        7,
+        "pil",
+        "bf16",
+        "fp16",
+        true,
+        false,
+        "fp16",
+        256,
+        2,
+        "fp16",
+        77,
+        "euler",
+        "flow",
+        "",
+        false,
+        "euler",
+        "",
+        1,
+        24,
+        false,
+        false,
+        "info",
+        "",
+        "",
+        "outputs/",
+        318,
+        "randomize",
+        "cuda"
+      ]
+    },
+    {
+      "id": 7,
+      "type": "ConditioningStage",
+      "pos": [
+        478.39678955078125,
+        856.6398315429688
+      ],
+      "size": [
+        355.20001220703125,
+        66
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "forward_batch",
+          "type": "FORWARD_BATCH",
+          "link": 4
+        },
+        {
+          "name": "inference_args",
+          "type": "INFERENCE_ARGS",
+          "link": 46
+        },
+        {
+          "name": "modules",
+          "type": "modules",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "forward_batch",
+          "type": "FORWARD_BATCH",
+          "slot_index": 0,
+          "links": [
+            5
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ConditioningStage"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 30,
+      "type": "VHS_VideoCombine",
+      "pos": [
+        2611.28759765625,
+        853.4730834960938
+      ],
+      "size": [
+        777.722412109375,
+        334
+      ],
+      "flags": {},
+      "order": 18,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 40
+        },
+        {
+          "name": "audio",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": null
+        },
+        {
+          "name": "meta_batch",
+          "shape": 7,
+          "type": "VHS_BatchManager",
+          "link": null
+        },
+        {
+          "name": "vae",
+          "shape": 7,
+          "type": "VAE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Filenames",
+          "type": "VHS_FILENAMES",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfyui-videohelpersuite",
+        "ver": "1.5.9",
+        "Node name for S&R": "VHS_VideoCombine"
+      },
+      "widgets_values": {
+        "frame_rate": 24,
+        "loop_count": 0,
+        "filename_prefix": "hunyuanvideo_output",
+        "format": "video/h264-mp4",
+        "pix_fmt": "yuv420p",
+        "crf": 19,
+        "save_metadata": true,
+        "trim_to_audio": false,
+        "pingpong": false,
+        "save_output": false,
+        "videopreview": {
+          "hidden": false,
+          "paused": false,
+          "params": {
+            "filename": "hunyuanvideo_output_00004.mp4",
+            "subfolder": "",
+            "type": "temp",
+            "format": "video/h264-mp4",
+            "frame_rate": 24,
+            "workflow": "hunyuanvideo_output_00004.png",
+            "fullpath": "E:\\ComfyUI\\temp\\hunyuanvideo_output_00004.mp4"
+          },
+          "muted": false
+        }
+      }
+    },
+    {
+      "id": 4,
+      "type": "InputValidationStage",
+      "pos": [
+        -571.3489379882812,
+        769.1119384765625
+      ],
+      "size": [
+        355.20001220703125,
+        86
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "forward_batch",
+          "type": "FORWARD_BATCH",
+          "link": 15
+        },
+        {
+          "name": "inference_args",
+          "type": "INFERENCE_ARGS",
+          "link": 43
+        },
+        {
+          "name": "vae",
+          "type": "MODULES",
+          "link": 17
+        },
+        {
+          "name": "transformer",
+          "type": "MODULES",
+          "link": 19
+        }
+      ],
+      "outputs": [
+        {
+          "name": "forward_batch",
+          "type": "FORWARD_BATCH",
+          "slot_index": 0,
+          "links": [
+            2
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "InputValidationStage"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 14,
+      "type": "LlamaEncodingStage",
+      "pos": [
+        -38.41735076904297,
+        843.7511596679688
+      ],
+      "size": [
+        355.20001220703125,
+        86
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "forward_batch",
+          "type": "FORWARD_BATCH",
+          "link": 2
+        },
+        {
+          "name": "inference_args",
+          "type": "INFERENCE_ARGS",
+          "link": 45
+        },
+        {
+          "name": "text_encoder",
+          "type": "MODULES",
+          "link": 21
+        },
+        {
+          "name": "tokenizer",
+          "type": "MODULES",
+          "link": 24
+        }
+      ],
+      "outputs": [
+        {
+          "name": "forward_batch",
+          "type": "FORWARD_BATCH",
+          "slot_index": 0,
+          "links": [
+            3
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LlamaEncodingStage"
+      },
+      "widgets_values": []
+    }
+  ],
+  "links": [
+    [
+      2,
+      4,
+      0,
+      14,
+      0,
+      "FORWARD_BATCH"
+    ],
+    [
+      3,
+      14,
+      0,
+      15,
+      0,
+      "FORWARD_BATCH"
+    ],
+    [
+      4,
+      15,
+      0,
+      7,
+      0,
+      "FORWARD_BATCH"
+    ],
+    [
+      5,
+      7,
+      0,
+      8,
+      0,
+      "FORWARD_BATCH"
+    ],
+    [
+      6,
+      8,
+      0,
+      9,
+      0,
+      "FORWARD_BATCH"
+    ],
+    [
+      9,
+      9,
+      0,
+      10,
+      0,
+      "FORWARD_BATCH"
+    ],
+    [
+      10,
+      10,
+      0,
+      12,
+      0,
+      "FORWARD_BATCH"
+    ],
+    [
+      11,
+      12,
+      0,
+      16,
+      0,
+      "FORWARD_BATCH"
+    ],
+    [
+      15,
+      29,
+      0,
+      4,
+      0,
+      "FORWARD_BATCH"
+    ],
+    [
+      17,
+      24,
+      0,
+      4,
+      2,
+      "modules"
+    ],
+    [
+      19,
+      25,
+      0,
+      4,
+      3,
+      "modules"
+    ],
+    [
+      21,
+      19,
+      0,
+      14,
+      2,
+      "modules"
+    ],
+    [
+      24,
+      22,
+      0,
+      14,
+      3,
+      "modules"
+    ],
+    [
+      26,
+      26,
+      0,
+      10,
+      2,
+      "modules"
+    ],
+    [
+      29,
+      23,
+      0,
+      15,
+      3,
+      "modules"
+    ],
+    [
+      30,
+      20,
+      0,
+      15,
+      2,
+      "modules"
+    ],
+    [
+      31,
+      25,
+      0,
+      10,
+      3,
+      "modules"
+    ],
+    [
+      37,
+      26,
+      0,
+      9,
+      2,
+      "modules"
+    ],
+    [
+      38,
+      26,
+      0,
+      8,
+      2,
+      "modules"
+    ],
+    [
+      39,
+      24,
+      0,
+      12,
+      2,
+      "modules"
+    ],
+    [
+      40,
+      16,
+      0,
+      30,
+      0,
+      "IMAGE"
+    ],
+    [
+      42,
+      31,
+      0,
+      29,
+      0,
+      "INFERENCE_ARGS"
+    ],
+    [
+      43,
+      31,
+      0,
+      4,
+      1,
+      "INFERENCE_ARGS"
+    ],
+    [
+      44,
+      31,
+      0,
+      25,
+      0,
+      "INFERENCE_ARGS"
+    ],
+    [
+      45,
+      31,
+      0,
+      14,
+      1,
+      "INFERENCE_ARGS"
+    ],
+    [
+      46,
+      31,
+      0,
+      7,
+      1,
+      "INFERENCE_ARGS"
+    ],
+    [
+      48,
+      31,
+      0,
+      8,
+      1,
+      "INFERENCE_ARGS"
+    ],
+    [
+      49,
+      31,
+      0,
+      26,
+      0,
+      "INFERENCE_ARGS"
+    ],
+    [
+      50,
+      31,
+      0,
+      9,
+      1,
+      "INFERENCE_ARGS"
+    ],
+    [
+      51,
+      31,
+      0,
+      15,
+      1,
+      "INFERENCE_ARGS"
+    ],
+    [
+      52,
+      31,
+      0,
+      19,
+      0,
+      "INFERENCE_ARGS"
+    ],
+    [
+      53,
+      31,
+      0,
+      22,
+      0,
+      "INFERENCE_ARGS"
+    ],
+    [
+      54,
+      31,
+      0,
+      23,
+      0,
+      "INFERENCE_ARGS"
+    ],
+    [
+      55,
+      31,
+      0,
+      20,
+      0,
+      "INFERENCE_ARGS"
+    ],
+    [
+      56,
+      31,
+      0,
+      24,
+      0,
+      "INFERENCE_ARGS"
+    ],
+    [
+      57,
+      31,
+      0,
+      10,
+      1,
+      "INFERENCE_ARGS"
+    ],
+    [
+      58,
+      31,
+      0,
+      12,
+      1,
+      "INFERENCE_ARGS"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 1.116781577942492,
+      "offset": [
+        1186.1968645822253,
+        -123.36420423259429
+      ]
+    },
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true
+  },
+  "version": 0.4
+}
