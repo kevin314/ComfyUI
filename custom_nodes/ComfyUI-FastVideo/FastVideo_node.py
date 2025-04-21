@@ -14,7 +14,7 @@ from PIL import Image, ImageOps, ImageSequence
 from PIL.PngImagePlugin import PngInfo
 import numpy as np
 import safetensors.torch
-os.environ["HF_HUB_OFFLINE"] = "1"
+#os.environ["HF_HUB_OFFLINE"] = "1"
 
 import argparse
 from pathlib import Path
@@ -48,14 +48,8 @@ import latent_preview
 import node_helpers
 import subprocess
 
-from fastvideo.models.hunyuan.inference import HunyuanVideoSampler
-from fastvideo.models.hunyuan.diffusion.pipelines import HunyuanVideoPipeline
-from fastvideo.models.hunyuan.diffusion.schedulers import FlowMatchDiscreteScheduler
-from fastvideo.models.hunyuan.text_encoder import TextEncoder
-from fastvideo.models.hunyuan.vae import load_vae
-from fastvideo.models.hunyuan.modules.modulate_layers import modulate
-from fastvideo.utils.parallel_states import initialize_sequence_parallel_state, nccl_info
 from fastvideo.v1.logger import init_logger
+from fastvideo import VideoGenerator
 
 logger = init_logger(__name__)
 
@@ -68,9 +62,11 @@ class FastVideoSampler:
             "required": {
                 "num_gpus": ("INT", {"default": 2, "min": 1, "max": 16}),
                 "master_port": ("INT", {"default": 29503}),
-                "model_path": ("STRING", {"default": "/workspace/FastVideo/data/FastHunyuan-diffusers"}),
-                "prompt_path": ("STRING", {"default": "/workspace/FastVideo/./assets/prompt.txt"}),
-                "output_path": ("STRING", {"default": "/workspace/FastVideo/outputs_video/"}),
+                "model_path": ("STRING", {"default": "FastHunyuan-diffusers"}),
+                "prompt": ("STRING",
+                           {"default": "A curious raccoon peers through a vibrant field of yellow sunflowers, its eyes wide with interest. The playful yet serene atmosphere is complemented by soft natural light filtering through the petals. Mid-shot, warm and cheerful tones."}),
+                #"prompt_path": ("STRING", {"default": os.path.join(os.path.dirname(os.path.abspath(__file__)), "prompts.txt")}),
+                "output_path": ("STRING", {"default": "/workspace/ComfyUI/outputs_video/"}),
                 "height": ("INT", {"default": 720}),
                 "width": ("INT", {"default": 1280}),
                 "num_frames": ("INT", {"default": 45}),
@@ -89,6 +85,7 @@ class FastVideoSampler:
     RETURN_TYPES = ("STRING",)
     RETURN_NAMES = ("video_path",)
     FUNCTION = "launch_inference"
+    #FUNCTION = "generate_video"
     CATEGORY = "fastvideo"
 
     def load_output_video(self, output_dir):
@@ -105,12 +102,12 @@ class FastVideoSampler:
         video_files.sort()
         return video_files[0]
 
-    def launch_inference(
+    def launch_inference_old(
         self,
         num_gpus,
         master_port,
         model_path,
-        prompt_path,
+        prompt,
         output_path,
         height,
         width,
@@ -128,7 +125,7 @@ class FastVideoSampler:
         current_env = os.environ.copy()
         python_executable = sys.executable
 
-        main_script = "/workspace/FastVideo/fastvideo/v1/sample/v1_fastvideo_inference.py"
+        main_script = "custom_nodes/fastvideo/v1/sample/v1_fastvideo_inference.py"
 
         current_env["PYTHONIOENCODING"] = "utf-8"
         current_env["FASTVIDEO_ATTENTION_BACKEND"] = ""
@@ -149,7 +146,8 @@ class FastVideoSampler:
             "--guidance_scale", str(guidance_scale),
             "--embedded_cfg_scale", str(embedded_cfg_scale),
             "--flow_shift", str(flow_shift),
-            "--prompt_path", prompt_path,
+            #"--prompt_path", prompt_path,
+            "--prompt", str(prompt),
             "--seed", str(seed),
             "--output_path", output_path,
             "--model_path", model_path,
@@ -168,7 +166,7 @@ class FastVideoSampler:
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             universal_newlines=True,
-            bufsize=1,
+            bufsize=0,
             encoding='utf-8',
             errors='replace'
         )
@@ -179,9 +177,54 @@ class FastVideoSampler:
 
         process.wait()
 
-        video_path = self.load_output_video(output_path)
+        #video_path = self.load_output_video(output_path)
+        video_path = os.path.join(output_path, f"{prompt[:100]}.mp4")
+        print("VIDEOPATHX1", video_path)
         return (video_path,)
 
+    # global generator
+    # generator = VideoGenerator.from_pretrained(
+    #     model_path="FastVideo/FastHunyuan-diffusers",
+    #     num_gpus=2
+    # )
+
+    def launch_inference(
+        self,
+        num_gpus,
+        master_port,
+        model_path,
+        prompt,
+        output_path,
+        height,
+        width,
+        num_frames,
+        num_inference_steps,
+        guidance_scale,
+        embedded_cfg_scale,
+        flow_shift,
+        seed,
+        sp_size,
+        tp_size,
+        vae_sp,
+        fps,
+    ):
+        print("test")
+        generator = VideoGenerator.from_pretrained(
+            model_path="FastVideo/FastHunyuan-diffusers",
+            num_gpus=2
+        )
+        generator.generate_video(
+            prompt=prompt,
+            num_inference_steps=num_inference_steps,
+            num_frames=num_frames,
+            height=height,
+            width=width,
+            guidance_scale=guidance_scale,
+            seed=seed
+        )
+
+        output_path = os.path.join(args.output_path, f"{prompt[:100]}.mp4")
+        return(output_path,)
 
 # Register the custom node
 NODE_CLASS_MAPPINGS = {

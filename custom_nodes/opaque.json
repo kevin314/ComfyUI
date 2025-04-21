@@ -235,9 +235,9 @@
       "widgets_values": [
         2,
         2048,
-        "/workspace/FastVideo/data/FastHunyuan-diffusers",
-        "/workspace/FastVideo/./assets/prompt.txt",
-        "/workspace/FastVideo/outputs_video/",
+        "FastVideo/FastHunyuan-diffusers",
+        "A curious raccoon peers through a vibrant field of yellow sunflowers, its eyes wide with interest. The playful yet serene atmosphere is complemented by soft natural light filtering through the petals. Mid-shot, warm and cheerful tones.",
+        "/workspace/ComfyUI/outputs_video/",
         720,
         1280,
         45,

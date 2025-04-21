@@ -13,7 +13,7 @@ from PIL import Image, ImageOps, ImageSequence
 from PIL.PngImagePlugin import PngInfo
 import numpy as np
 import safetensors.torch
-os.environ["HF_HUB_OFFLINE"] = "1"
+#os.environ["HF_HUB_OFFLINE"] = "1"
 
 import argparse
 from pathlib import Path
@@ -46,12 +46,12 @@ import folder_paths
 import latent_preview
 import node_helpers
 
-from fastvideo.models.hunyuan.inference import HunyuanVideoSampler
+#from fastvideo.models.hunyuan.inference import HunyuanVideoSampler
 from fastvideo.v1.pipelines.hunyuan.hunyuan_pipeline import HunyuanVideoPipeline
-from fastvideo.models.hunyuan.vae import load_vae
+#from fastvideo.models.hunyuan.vae import load_vae
 
 from fastvideo.v1.models.loader.component_loader import PipelineComponentLoader
-from fastvideo.v1.inference_args import InferenceArgs
+from fastvideo.v1.fastvideo_args import FastVideoArgs
 from fastvideo.v1.pipelines.stages import (CLIPTextEncodingStage,
                                            ConditioningStage, DecodingStage,
                                            DenoisingStage, InputValidationStage,
@@ -274,7 +274,7 @@ class HunyuanInferenceArgs:
             if kwargs[field] == "":
                 kwargs[field] = None
 
-        args = InferenceArgs(**kwargs)
+        args = FastVideoArgs(**kwargs)
         print("before initialize_distributed_and_parallelism")
         initialize_distributed_and_parallelism(args)
         print("after initialize_distributed_and_parallelism")
