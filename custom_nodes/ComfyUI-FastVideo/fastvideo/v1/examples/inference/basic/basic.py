@@ -1,4 +1,4 @@
-from fastvideo import VideoGenerator
+from fastvideo.v1.entrypoints.video_generator import VideoGenerator
 
 def main():
     # FastVideo will automatically use the optimal default arguments for the

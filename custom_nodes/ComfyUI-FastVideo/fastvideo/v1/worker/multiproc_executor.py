@@ -16,6 +16,23 @@ from fastvideo.v1.worker.gpu_worker import run_worker_process
 
 logger = init_logger(__name__)
 
+import os, sys
+
+# Set up sys.path and PYTHONPATH for subprocess and multiprocessing compatibility
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))  # adjust as needed
+print("project_root!", project_root)
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
+
+# Make sure child processes (multiprocessing) see the same module paths
+existing_pythonpath = os.environ.get("PYTHONPATH", "")
+os.environ["PYTHONPATH"] = project_root + os.pathsep + existing_pythonpath
+
+
+# Ensure `utils` is recognized as a package
+utils_path = os.path.join(project_root, "utils")
+if os.path.isdir(utils_path) and utils_path not in sys.path:
+    sys.path.insert(0, utils_path)
 
 class MultiprocExecutor(Executor):
 
@@ -38,9 +55,9 @@ class MultiprocExecutor(Executor):
             # Then re-raise the signal to the parent process
             signal.default_int_handler(signum, frame)
 
-        signal.signal(signal.SIGUSR1, sigusr1_handler)
-        signal.signal(signal.SIGINT, sigint_handler)
-        signal.signal(signal.SIGTERM, sigint_handler)
+        # signal.signal(signal.SIGUSR1, sigusr1_handler)
+        # signal.signal(signal.SIGINT, sigint_handler)
+        # signal.signal(signal.SIGTERM, sigint_handler)
 
         self.world_size = self.fastvideo_args.num_gpus
         self.shutting_down = False

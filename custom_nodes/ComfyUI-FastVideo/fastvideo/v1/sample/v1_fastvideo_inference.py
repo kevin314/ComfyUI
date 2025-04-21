@@ -14,7 +14,8 @@ from fastvideo.v1.distributed import (init_distributed_environment,
 from fastvideo.v1.fastvideo_args import FastVideoArgs, prepare_fastvideo_args
 # Fix the import path
 from fastvideo.v1.inference_engine import InferenceEngine
-
+import fastvideo
+print('WOWZ1',fastvideo.__file__)
 
 def initialize_distributed_and_parallelism(fastvideo_args: FastVideoArgs):
     local_rank = int(os.environ.get("LOCAL_RANK", 0))

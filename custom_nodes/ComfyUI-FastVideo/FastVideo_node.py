@@ -28,9 +28,22 @@ import torchvision
 from einops import rearrange
 from types import SimpleNamespace
 
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.realpath(__file__)), "comfy"))
-sys.path.insert(0, "/workspace/FastVideo")
+# sys.path.insert(0, os.path.join(os.path.dirname(os.path.realpath(__file__)), "comfy"))
+# sys.path.insert(0, "/workspace/FastVideo")
 
+# Add the current script directory (this helps local module resolution)
+project_root = os.path.dirname(os.path.abspath(__file__))
+print("project_rootfirst", project_root)
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
+
+# Also explicitly add ComfyUI-FastVideo path to prioritize its version of fastvideo
+fastvideo_root = os.path.join(project_root, "ComfyUI-FastVideo")
+if fastvideo_root not in sys.path:
+    sys.path.insert(0, fastvideo_root)
+
+# sys.path.append(os.path.dirname(__file__))  # adds current file's dir
+# sys.path.append(os.path.join(os.path.dirname(__file__), 'fastvideo'))
 
 import comfy.diffusers_load
 import comfy.samplers
@@ -48,8 +61,8 @@ import latent_preview
 import node_helpers
 import subprocess
 
-from fastvideo.v1.logger import init_logger
-from fastvideo import VideoGenerator
+from .fastvideo.v1.logger import init_logger
+from .fastvideo.v1.entrypoints.video_generator import VideoGenerator
 
 logger = init_logger(__name__)
 
@@ -125,11 +138,16 @@ class FastVideoSampler:
         current_env = os.environ.copy()
         python_executable = sys.executable
 
-        main_script = "custom_nodes/fastvideo/v1/sample/v1_fastvideo_inference.py"
+        main_script = "custom_nodes/ComfyUI-FastVideo/fastvideo/v1/sample/v1_fastvideo_inference.py"
 
         current_env["PYTHONIOENCODING"] = "utf-8"
         current_env["FASTVIDEO_ATTENTION_BACKEND"] = ""
         current_env["MODEL_BASE"] = model_path
+
+
+        fastvideo_local_path = os.path.abspath("custom_nodes/ComfyUI-FastVideo")
+        pythonpath = fastvideo_local_path + os.pathsep + current_env.get("PYTHONPATH", "")
+        current_env["PYTHONPATH"] = pythonpath
 
         cmd = [
             python_executable, "-m", "torch.distributed.run",
@@ -208,6 +226,19 @@ class FastVideoSampler:
         vae_sp,
         fps,
     ):
+        
+        current_env = os.environ.copy()
+        python_executable = sys.executable
+
+        current_env["PYTHONIOENCODING"] = "utf-8"
+        current_env["FASTVIDEO_ATTENTION_BACKEND"] = ""
+        current_env["MODEL_BASE"] = model_path
+
+
+        fastvideo_local_path = os.path.abspath("custom_nodes/ComfyUI-FastVideo")
+        pythonpath = fastvideo_local_path + os.pathsep + current_env.get("PYTHONPATH", "")
+        current_env["PYTHONPATH"] = pythonpath
+
         print("test")
         generator = VideoGenerator.from_pretrained(
             model_path="FastVideo/FastHunyuan-diffusers",

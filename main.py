@@ -8,7 +8,7 @@ import time
 from comfy.cli_args import args
 from app.logger import setup_logger
 import itertools
-import utils.extra_config
+from utils.extra_config import *
 import logging
 import sys
 
@@ -24,11 +24,11 @@ def apply_custom_paths():
     # extra model paths
     extra_model_paths_config_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "extra_model_paths.yaml")
     if os.path.isfile(extra_model_paths_config_path):
-        utils.extra_config.load_extra_path_config(extra_model_paths_config_path)
+        load_extra_path_config(extra_model_paths_config_path)
 
     if args.extra_model_paths_config:
         for config_path in itertools.chain(*args.extra_model_paths_config):
-            utils.extra_config.load_extra_path_config(config_path)
+            load_extra_path_config(config_path)
 
     # --output-directory, --input-directory, --user-directory
     if args.output_directory:
