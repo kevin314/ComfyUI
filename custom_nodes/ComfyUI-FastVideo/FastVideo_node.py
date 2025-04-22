@@ -61,11 +61,10 @@ import latent_preview
 import node_helpers
 import subprocess
 
-#from fastvideo.v1.logger import init_logger
 from fastvideo import VideoGenerator
 import fastvideo
+
 print("IMPORT FROM", fastvideo.__file__)
-#logger = init_logger(__name__)
 
 MAX_RESOLUTION = 16384
 
@@ -99,8 +98,9 @@ class FastVideoSampler:
     RETURN_TYPES = ("STRING",)
     RETURN_NAMES = ("video_path",)
     FUNCTION = "launch_inference"
-    #FUNCTION = "generate_video"
     CATEGORY = "fastvideo"
+
+    generator = None
 
     def load_output_video(self, output_dir):
         video_extensions = ["*.mp4", "*.avi", "*.mov", "*.mkv"]
@@ -201,11 +201,6 @@ class FastVideoSampler:
         print("VIDEOPATHX1", video_path)
         return (video_path,)
 
-    # global generator
-    # generator = VideoGenerator.from_pretrained(
-    #     model_path="FastVideo/FastHunyuan-diffusers",
-    #     num_gpus=2
-    # )
 
     def launch_inference(
         self,
@@ -240,12 +235,16 @@ class FastVideoSampler:
         # pythonpath = fastvideo_local_path + os.pathsep + current_env.get("PYTHONPATH", "")
         # current_env["PYTHONPATH"] = pythonpath
 
-        print("test")
-        generator = VideoGenerator.from_pretrained(
-            model_path="FastVideo/FastHunyuan-diffusers",
-            num_gpus=1
-        )
-        generator.generate_video(
+        if self.generator is None:
+            self.generator = VideoGenerator.from_pretrained(
+                model_path="FastVideo/FastHunyuan-diffusers",
+                num_gpus=num_gpus,
+                output_path=output_path,
+                tp_size=tp_size,
+                sp_size=sp_size,
+            )
+
+        self.generator.generate_video(
             prompt=prompt,
             num_inference_steps=num_inference_steps,
             num_frames=num_frames,
@@ -255,7 +254,7 @@ class FastVideoSampler:
             seed=seed
         )
 
-        output_path = os.path.join(args.output_path, f"{prompt[:100]}.mp4")
+        output_path = os.path.join(output_path, f"{prompt[:100]}.mp4")
         return(output_path,)
 
 # Register the custom node
