@@ -28,19 +28,19 @@ import torchvision
 from einops import rearrange
 from types import SimpleNamespace
 
-# sys.path.insert(0, os.path.join(os.path.dirname(os.path.realpath(__file__)), "comfy"))
-# sys.path.insert(0, "/workspace/FastVideo")
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.realpath(__file__)), "comfy"))
+sys.path.insert(0, "/workspace/FastVideo")
 
 # Add the current script directory (this helps local module resolution)
-project_root = os.path.dirname(os.path.abspath(__file__))
-print("project_rootfirst", project_root)
-if project_root not in sys.path:
-    sys.path.insert(0, project_root)
+# project_root = os.path.dirname(os.path.abspath(__file__))
+# print("project_rootfirst", project_root)
+# if project_root not in sys.path:
+#     sys.path.insert(0, project_root)
 
-# Also explicitly add ComfyUI-FastVideo path to prioritize its version of fastvideo
-fastvideo_root = os.path.join(project_root, "ComfyUI-FastVideo")
-if fastvideo_root not in sys.path:
-    sys.path.insert(0, fastvideo_root)
+# # Also explicitly add ComfyUI-FastVideo path to prioritize its version of fastvideo
+# fastvideo_root = os.path.join(project_root, "ComfyUI-FastVideo")
+# if fastvideo_root not in sys.path:
+#     sys.path.insert(0, fastvideo_root)
 
 # sys.path.append(os.path.dirname(__file__))  # adds current file's dir
 # sys.path.append(os.path.join(os.path.dirname(__file__), 'fastvideo'))
@@ -61,10 +61,11 @@ import latent_preview
 import node_helpers
 import subprocess
 
-from .fastvideo.v1.logger import init_logger
-from .fastvideo.v1.entrypoints.video_generator import VideoGenerator
-
-logger = init_logger(__name__)
+#from fastvideo.v1.logger import init_logger
+from fastvideo import VideoGenerator
+import fastvideo
+print("IMPORT FROM", fastvideo.__file__)
+#logger = init_logger(__name__)
 
 MAX_RESOLUTION = 16384
 
@@ -109,7 +110,7 @@ class FastVideoSampler:
             video_files.extend(glob.glob(os.path.join(output_dir, ext)))
 
         if not video_files:
-            logger.warning("No video files found in output directory: %s", output_dir)
+            print("No video files found in output directory: %s", output_dir)
             return ""
 
         video_files.sort()
@@ -175,8 +176,8 @@ class FastVideoSampler:
         if vae_sp:
             cmd.append("--vae-sp")
 
-        logger.info("Launching FastVideo inference with %d GPU(s)", num_gpus)
-        logger.info("Command: %s", " ".join(cmd))
+        print("Launching FastVideo inference with %d GPU(s)", num_gpus)
+        print("Command: %s", " ".join(cmd))
 
         process = subprocess.Popen(
             cmd,
@@ -235,14 +236,14 @@ class FastVideoSampler:
         current_env["MODEL_BASE"] = model_path
 
 
-        fastvideo_local_path = os.path.abspath("custom_nodes/ComfyUI-FastVideo")
-        pythonpath = fastvideo_local_path + os.pathsep + current_env.get("PYTHONPATH", "")
-        current_env["PYTHONPATH"] = pythonpath
+        # fastvideo_local_path = os.path.abspath("custom_nodes/ComfyUI-FastVideo")
+        # pythonpath = fastvideo_local_path + os.pathsep + current_env.get("PYTHONPATH", "")
+        # current_env["PYTHONPATH"] = pythonpath
 
         print("test")
         generator = VideoGenerator.from_pretrained(
             model_path="FastVideo/FastHunyuan-diffusers",
-            num_gpus=2
+            num_gpus=1
         )
         generator.generate_video(
             prompt=prompt,
