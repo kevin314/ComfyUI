@@ -8,9 +8,12 @@ import time
 from comfy.cli_args import args
 from app.logger import setup_logger
 import itertools
-import ComfyUI.utils.extra_config
 import logging
 import sys
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+import ComfyUI.utils.extra_config
+
 
 if __name__ == "__main__":
     #NOTE: These do not do anything on core ComfyUI which should already have no communication with the internet, they are for custom nodes.
