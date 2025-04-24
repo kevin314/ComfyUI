@@ -1,11 +1,8 @@
-class LoadFastVideoInferenceArgs:
+class InferenceArgs:
     @classmethod
     def INPUT_TYPES(cls):
         return {
-            "required": {
-                "prompt": ("STRING",
-                           {"default": "A curious raccoon peers through a vibrant field of yellow sunflowers, its eyes wide with interest. The playful yet serene atmosphere is complemented by soft natural light filtering through the petals. Mid-shot, warm and cheerful tones."}),
-                "output_path": ("STRING", {"default": "/workspace/ComfyUI/outputs_video/"}),
+            "optional": {
                 "height": ("INT", {"default": 720}),
                 "width": ("INT", {"default": 1280}),
                 "num_frames": ("INT", {"default": 45}),
@@ -19,13 +16,11 @@ class LoadFastVideoInferenceArgs:
 
     RETURN_TYPES = ("INFERENCE_ARGS",)
     RETURN_NAMES = ("inference_args",)
-    FUNCTION = "load_args"
+    FUNCTION = "set_args"
     CATEGORY = "fastvideo"
 
-    def load_args(
+    def set_args(
         self,
-        prompt,
-        output_path,
         height,
         width,
         num_frames,
@@ -36,8 +31,6 @@ class LoadFastVideoInferenceArgs:
         fps,
     ):
         args = {
-            "prompt": prompt,
-            "output_path": output_path,
             "height": height,
             "width": width,
             "num_frames": num_frames,
@@ -47,14 +40,5 @@ class LoadFastVideoInferenceArgs:
             "seed": seed,
             "fps": fps,
         }
-        print("BIG ARGS1", args)
         return(args,)
 
-# # Register the custom node
-# NODE_CLASS_MAPPINGS = {
-#     "LoadFastVideoInferenceArgs": LoadFastVideoInferenceArgs,
-# }
-
-# NODE_DISPLAY_NAME_MAPPINGS = {
-#     "LoadFastVideoInferenceArgs": "Load FastVideo Inference Arguments",
-# }

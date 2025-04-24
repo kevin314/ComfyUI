@@ -1,3 +1,3 @@
-from .fastvideo_nodes.nodes import NODE_CLASS_MAPPINGS
+from .video_generator.nodes import NODE_CLASS_MAPPINGS, NODE_DISPLAY_NAME_MAPPINGS
 
-__all__ = ['NODE_CLASS_MAPPINGS']
+__all__ = ['NODE_CLASS_MAPPINGS', 'NODE_DISPLAY_NAME_MAPPINGS']

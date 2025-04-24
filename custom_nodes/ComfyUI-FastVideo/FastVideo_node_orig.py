@@ -28,8 +28,8 @@ import torchvision
 from einops import rearrange
 from types import SimpleNamespace
 
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.realpath(__file__)), "comfy"))
-sys.path.insert(0, "/workspace/FastVideo")
+# sys.path.insert(0, os.path.join(os.path.dirname(os.path.realpath(__file__)), "comfy"))
+# sys.path.insert(0, "/workspace/FastVideo")
 
 # Add the current script directory (this helps local module resolution)
 # project_root = os.path.dirname(os.path.abspath(__file__))
