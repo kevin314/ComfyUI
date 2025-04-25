@@ -18,9 +18,9 @@ class VideoGenerator:
                 "inference_args": ("INFERENCE_ARGS",),
                 "prompt": ("STRING",
                            {"multiline": True,
-                            "default": "A curious raccoon peers through a vibrant field of yellow sunflowers, "
-                            "its eyes wide with interest. The playful yet serene atmosphere is complemented by "
-                            "soft natural light filtering through the petals. Mid-shot, warm and cheerful tones."}),
+                            "default": "A ripe orange tumbles gently from a tree and lands on the head of a lounging capybara, "
+                            "who blinks slowly in response. The moment is quietly humorous and oddly serene, framed by "
+                            "lush green foliage and dappled sunlight. Mid-shot, warm and whimsical tones."}),
                 "output_path": ("STRING", {"default": "/workspace/ComfyUI/outputs_video/"}),
                 "num_gpus": ("INT", {"default": 2, "min": 1, "max": 16}),
                 "master_port": ("INT", {"default": 29503}),
@@ -61,7 +61,6 @@ class VideoGenerator:
     def launch_inference(
         self,
         inference_args,
-        vae_config,
         text_encoder_config,
         dit_config,
         prompt,
@@ -73,6 +72,7 @@ class VideoGenerator:
         sp_size,
         tp_size,
         vae_sp,
+        vae_config=None,
         #test
     ):
         print('inference_argsx', inference_args)
