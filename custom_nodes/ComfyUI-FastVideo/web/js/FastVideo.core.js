@@ -25,6 +25,10 @@ function drawAutoAnnotated(ctx, node, widget_width, y, H) {
     const show_text = app.canvas.ds.scale >= 0.5;
     const margin = 15;
 
+    // Make AUTO clickable region smaller
+    const autoTextWidth = 30;
+    const autoTextRightMargin = 5;
+
     ctx.textAlign = 'left';
     ctx.strokeStyle = litegraph_base.WIDGET_OUTLINE_COLOR;
     ctx.fillStyle = litegraph_base.WIDGET_BGCOLOR;
@@ -43,15 +47,58 @@ function drawAutoAnnotated(ctx, node, widget_width, y, H) {
         // Check if in AUTO mode
         const isAuto = this.isAuto === true;
 
-        // Draw AUTO indicator
+        // Draw cog icon instead of AUTO text
         ctx.save();
-        ctx.font = ctx.font.replace(/\d+px/, "14px");
+        if (isAuto) {
+            ctx.fillStyle = litegraph_base.WIDGET_TEXT_COLOR;
+            ctx.strokeStyle = litegraph_base.WIDGET_TEXT_COLOR;
+        } else {
+            ctx.fillStyle = litegraph_base.WIDGET_SECONDARY_TEXT_COLOR;
+            ctx.strokeStyle = litegraph_base.WIDGET_SECONDARY_TEXT_COLOR;
+        }
+
+        // Position for the cog
+        const cogX = widget_width - autoTextRightMargin - autoTextWidth - 6;
+        const cogY = y + H * 0.5;
+        const cogRadius = 6; // Radius of the cog
+        const toothLength = 2; // Length of the teeth
+        const numTeeth = 8; // Number of teeth
+        const holeRadius = 2; // Radius of the center hole
+
+        // Draw the cog
+        // First draw the center circle
+        ctx.beginPath();
+        ctx.arc(cogX, cogY, cogRadius - toothLength, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Draw the center hole (by clearing it)
+        ctx.beginPath();
+        ctx.arc(cogX, cogY, holeRadius, 0, Math.PI * 2);
+        ctx.fillStyle = litegraph_base.WIDGET_BGCOLOR;
+        ctx.fill();
+
+        // Reset fill style for the teeth
         if (isAuto) {
             ctx.fillStyle = litegraph_base.WIDGET_TEXT_COLOR;
         } else {
             ctx.fillStyle = litegraph_base.WIDGET_SECONDARY_TEXT_COLOR;
         }
-        ctx.fillText('AUTO', widget_width - margin - 40, y + H * 0.7);
+
+        // Then draw the teeth
+        ctx.beginPath();
+        for (let i = 0; i < numTeeth; i++) {
+            const angle = (i / numTeeth) * Math.PI * 2;
+            const innerX = cogX + (cogRadius - toothLength) * Math.cos(angle);
+            const innerY = cogY + (cogRadius - toothLength) * Math.sin(angle);
+            const outerX = cogX + cogRadius * Math.cos(angle);
+            const outerY = cogY + cogRadius * Math.sin(angle);
+
+            ctx.moveTo(innerX, innerY);
+            ctx.lineTo(outerX, outerY);
+        }
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
         ctx.restore();
 
         // Draw label
@@ -62,29 +109,96 @@ function drawAutoAnnotated(ctx, node, widget_width, y, H) {
         ctx.textAlign = 'right';
         const text = isAuto ? "auto" : this.displayValue();
         ctx.fillStyle = isAuto ? litegraph_base.WIDGET_SECONDARY_TEXT_COLOR : litegraph_base.WIDGET_TEXT_COLOR;
-        ctx.fillText(text, widget_width - margin - 45, y + H * 0.7);
+        ctx.fillText(text, widget_width - autoTextRightMargin - autoTextWidth - 15, y + H * 0.7);
+
+        // Draw increment/decrement buttons if not in AUTO mode
+        if (!isAuto && !this.disabled) {
+            // Draw decrement button (left triangle)
+            ctx.fillStyle = litegraph_base.WIDGET_TEXT_COLOR;
+            ctx.beginPath();
+            ctx.moveTo(margin + 16, y + 5);
+            ctx.lineTo(margin + 6, y + H * 0.5);
+            ctx.lineTo(margin + 16, y + H - 5);
+            ctx.fill();
+
+            // Draw increment button (right triangle)
+            ctx.beginPath();
+            ctx.moveTo(widget_width - margin - 16, y + 5);
+            ctx.lineTo(widget_width - margin - 6, y + H * 0.5);
+            ctx.lineTo(widget_width - margin - 16, y + H - 5);
+            ctx.fill();
+        }
     }
 
     console.log("Finished drawing AUTO widget", this.name);
 }
 
 function mouseAutoAnnotated(event, [x, y], node) {
-    console.log("Mouse event on AUTO widget", this.name, event.type);
+    console.log("Mouse event on AUTO widget", this.name, event.type, "isAuto:", this.isAuto, "x:", x, "y:", y);
 
     const widget_width = node.size[0];
     const margin = 15;
+    const H = 20; // Widget height
 
-    // Toggle AUTO mode when clicking on the AUTO text
-    if (event.type === "pointerdown") {
-        if (x > widget_width - margin - 40 && x < widget_width - margin) {
+    // Make AUTO clickable region smaller
+    const autoTextWidth = 30;
+    const autoTextRightMargin = 5;
+
+    // Define the cog radius (same as in the draw function)
+    const cogRadius = 6;
+
+    // Determine if clicking on increment/decrement buttons
+    const delta = x < 40 ? -1 : x > widget_width - 48 ? 1 : 0;
+    const old_value = this.value;
+
+    // Handle different event types
+    if (event.type === "pointermove" && this.captureInput) {
+        // Handle dragging
+        const delta_move = (x - this.last_x) * 0.1 * (this.options.step || 1);
+        this.last_x = x;
+
+        if (this.isAuto) return false;
+
+        let v = parseFloat(this.value);
+        v += delta_move;
+
+        // Apply min/max constraints
+        if (this.options.min != null) {
+            v = Math.max(this.options.min, v);
+        }
+        if (this.options.max != null) {
+            v = Math.min(this.options.max, v);
+        }
+
+        // Round to precision or to integer
+        if (this.type === "FVAUTOINT") {
+            v = Math.round(v);
+        } else if (this.options.precision !== undefined) {
+            const precision = Math.pow(10, this.options.precision);
+            v = Math.round(v * precision) / precision;
+        }
+
+        this.value = v;
+        if (this.callback) {
+            this.callback(this.value);
+        }
+
+        node.graph.setDirtyCanvas(true, false);
+        return true;
+    } else if (event.type === "pointerdown") {
+        // Check if clicking on AUTO text - make region match the cog position and size
+        if (x > widget_width - autoTextRightMargin - autoTextWidth - 5 - cogRadius &&
+            x < widget_width - autoTextRightMargin - autoTextWidth - 5 + cogRadius) {
+            console.log("Toggling AUTO mode for", this.name);
             this.isAuto = !this.isAuto;
 
             if (this.isAuto) {
                 // Store current value before switching to auto
-                this.manualValue = this.value;
+                this.cachedValue = this.value;
+                this.value = -99999;  // Use the same special value
             } else {
                 // Restore manual value when switching from auto
-                this.value = this.manualValue !== undefined ? this.manualValue : (this.options.default || 0);
+                this.value = this.cachedValue !== undefined ? this.cachedValue : (this.options.default || 0);
             }
 
             // Trigger callback
@@ -96,16 +210,86 @@ function mouseAutoAnnotated(event, [x, y], node) {
             node.graph.setDirtyCanvas(true, false);
             return true;
         }
-    }
 
-    // Only handle other mouse events if not in AUTO mode
-    if (!this.isAuto) {
-        // Use default number widget behavior
-        if (this.type === "FVAUTOINT") {
-            return LiteGraph.widgets.number.mouse.call(this, event, [x, y], node);
-        } else {
-            return LiteGraph.widgets.number.mouse.call(this, event, [x, y], node);
+        if (this.isAuto) return false;
+
+        // Handle increment/decrement buttons
+        if (delta !== 0) {
+            let v = parseFloat(this.value);
+            v += delta * 0.1 * (this.options.step || 1);
+
+            // Apply min/max constraints
+            if (this.options.min != null) {
+                v = Math.max(this.options.min, v);
+            }
+            if (this.options.max != null) {
+                v = Math.min(this.options.max, v);
+            }
+
+            // Round to precision or to integer
+            if (this.type === "FVAUTOINT") {
+                v = Math.round(v);
+            } else if (this.options.precision !== undefined) {
+                const precision = Math.pow(10, this.options.precision);
+                v = Math.round(v * precision) / precision;
+            }
+
+            this.value = v;
+            if (this.callback) {
+                this.callback(this.value);
+            }
+
+            node.graph.setDirtyCanvas(true, false);
+            return true;
         }
+
+        // Start dragging
+        this.captureInput = true;
+        this.last_x = x;
+        return true;
+    } else if (event.type === "pointerup") {
+        // Handle click on value area
+        if (event.click_time < 200 && delta === 0 && !this.isAuto) {
+            const d_callback = (v) => {
+                this.value = this.parseValue?.(v) ?? Number(v);
+
+                // Apply min/max constraints
+                if (this.options.min != null) {
+                    this.value = Math.max(this.options.min, this.value);
+                }
+                if (this.options.max != null) {
+                    this.value = Math.min(this.options.max, this.value);
+                }
+
+                // Round to precision or to integer
+                if (this.type === "FVAUTOINT") {
+                    this.value = Math.round(this.value);
+                } else if (this.options.precision !== undefined) {
+                    const precision = Math.pow(10, this.options.precision);
+                    this.value = Math.round(this.value * precision) / precision;
+                }
+
+                if (this.callback) {
+                    this.callback(this.value);
+                }
+
+                node.graph.setDirtyCanvas(true, false);
+            };
+
+            const dialog = app.canvas.prompt(
+                'Value',
+                this.value,
+                d_callback,
+                event
+            );
+
+            return true;
+        }
+
+        // Stop dragging
+        console.log("Stopping drag for", this.name);
+        this.captureInput = false;
+        return true;
     }
 
     return false;
@@ -114,8 +298,14 @@ function mouseAutoAnnotated(event, [x, y], node) {
 function makeAutoAnnotated(widget, inputData) {
     console.log("Making AUTO widget for", widget.name, "with inputData:", inputData);
 
-    // Store original callback
-    const callback_orig = widget.callback;
+    // Store original properties
+    const original = {
+        callback: widget.callback,
+        type: widget.type,
+        value: widget.value
+    };
+
+    console.log("Original widget:", widget);
 
     // Add AUTO properties to the widget
     Object.assign(widget, {
@@ -123,7 +313,9 @@ function makeAutoAnnotated(widget, inputData) {
         draw: drawAutoAnnotated,
         mouse: mouseAutoAnnotated,
         isAuto: true,
-        manualValue: widget.value,
+        cachedValue: widget.value,
+        captureInput: false,
+        last_x: 0,
         computeSize(width) {
             return [width, 20];
         },
@@ -131,27 +323,35 @@ function makeAutoAnnotated(widget, inputData) {
             if (this.type === "FVAUTOINT") {
                 return Math.round(this.value).toString();
             }
+            // For FLOAT values, check if it's actually an integer
+            if (Number.isInteger(this.value)) {
+                return this.value.toString();
+            }
             return this.value.toFixed(this.options.precision || 2);
         },
+        parseValue: function (v) {
+            if (typeof v === "string") {
+                return parseFloat(v);
+            }
+            return v;
+        },
         serializeValue: function () {
-            return {
-                value: this.value,
-                isAuto: this.isAuto,
-                manualValue: this.manualValue
-            };
+            // Return special value for AUTO mode
+            return this.isAuto ? -99999 : this.value;
         },
         deserializeValue: function (data) {
-            if (typeof data === "object" && data !== null && "isAuto" in data) {
-                this.isAuto = data.isAuto;
-                this.value = data.value;
-                this.manualValue = data.manualValue;
+            // Since we're only serializing the value, we need to handle deserialization differently
+            if (data === -99999) {
+                this.isAuto = true;
+                // Keep the current value
             } else {
-                this.value = data;
                 this.isAuto = false;
+                this.value = data;
             }
         },
         config: inputData,
-        options: Object.assign({}, inputData[1], widget.options)
+        options: Object.assign({}, inputData[1], widget.options),
+        original: original  // Store original properties for reference
     });
 
     // Override callback to handle AUTO mode
@@ -159,12 +359,11 @@ function makeAutoAnnotated(widget, inputData) {
         if (this.isAuto) {
             return;
         }
-        return callback_orig?.call(this, v);
+        return original.callback?.call(this, v);
     };
 
-    // Debug: Verify the draw method is properly set
+    // Debug: Verify the setup
     console.log("Created AUTO widget:", widget);
-    console.log("Widget draw method:", widget.draw === drawAutoAnnotated ? "Correctly set" : "NOT SET CORRECTLY");
 
     return widget;
 }
