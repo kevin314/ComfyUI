@@ -20,6 +20,7 @@ function chainCallback(object, property, callback) {
 
 function drawAutoAnnotated(ctx, node, widget_width, y, H) {
     console.log("Drawing AUTO widget", this.name, "isAuto:", this.isAuto);
+    console.log("APP1", app.canvas)
 
     const litegraph_base = LiteGraph;
     const show_text = app.canvas.ds.scale >= 0.5;
@@ -102,8 +103,11 @@ function drawAutoAnnotated(ctx, node, widget_width, y, H) {
         ctx.restore();
 
         // Draw label
-        ctx.fillStyle = litegraph_base.WIDGET_TEXT_COLOR;
-        ctx.fillText(this.label || this.name, margin * 2 + 5, y + H * 0.7);
+        ctx.fillStyle = litegraph_base.WIDGET_SECONDARY_TEXT_COLOR;
+        const label = this.label || this.name;
+        if (label != null) {
+            ctx.fillText(label, margin * 2 + 5, y + H * 0.7);
+        }
 
         // Draw value
         ctx.textAlign = 'right';
@@ -159,6 +163,9 @@ function mouseAutoAnnotated(event, [x, y], node) {
 
         if (this.isAuto) return false;
 
+        // For combo boxes, don't handle dragging
+        if (this.config[0] === "FVAUTOCOMBO") return false;
+
         let v = parseFloat(this.value);
         v += delta_move;
 
@@ -171,7 +178,7 @@ function mouseAutoAnnotated(event, [x, y], node) {
         }
 
         // Round to precision or to integer
-        if (this.type === "FVAUTOINT") {
+        if (this.config[0] === "FVAUTOINT") {
             v = Math.round(v);
         } else if (this.options.precision !== undefined) {
             const precision = Math.pow(10, this.options.precision);
@@ -215,32 +222,65 @@ function mouseAutoAnnotated(event, [x, y], node) {
 
         // Handle increment/decrement buttons
         if (delta !== 0) {
-            let v = parseFloat(this.value);
-            v += delta * 0.1 * (this.options.step || 1);
+            if (this.config[0] === "FVAUTOCOMBO") {
+                // Get the combo options
+                const options = this.options.values || [];
+                if (options.length === 0) return true;
 
-            // Apply min/max constraints
-            if (this.options.min != null) {
-                v = Math.max(this.options.min, v);
-            }
-            if (this.options.max != null) {
-                v = Math.min(this.options.max, v);
-            }
+                // Find the current value in the options
+                let currentIndex = -1;
+                for (let i = 0; i < options.length; i++) {
+                    const optValue = typeof options[i] === 'object' ? options[i].value : options[i];
+                    if (optValue === this.value) {
+                        currentIndex = i;
+                        break;
+                    }
+                }
 
-            // Round to precision or to integer
-            if (this.type === "FVAUTOINT") {
-                v = Math.round(v);
-            } else if (this.options.precision !== undefined) {
-                const precision = Math.pow(10, this.options.precision);
-                v = Math.round(v * precision) / precision;
-            }
+                // Calculate the new index
+                let newIndex = currentIndex + delta;
+                if (newIndex < 0) newIndex = options.length - 1;
+                if (newIndex >= options.length) newIndex = 0;
 
-            this.value = v;
-            if (this.callback) {
-                this.callback(this.value);
-            }
+                // Set the new value
+                const newOption = options[newIndex];
+                this.value = typeof newOption === 'object' ? newOption.value : newOption;
 
-            node.graph.setDirtyCanvas(true, false);
-            return true;
+                if (this.callback) {
+                    this.callback(this.value);
+                }
+
+                node.graph.setDirtyCanvas(true, false);
+                return true;
+            } else {
+                // Original behavior for numeric widgets
+                let v = parseFloat(this.value);
+                v += delta * 0.1 * (this.options.step || 1);
+
+                // Apply min/max constraints
+                if (this.options.min != null) {
+                    v = Math.max(this.options.min, v);
+                }
+                if (this.options.max != null) {
+                    v = Math.min(this.options.max, v);
+                }
+
+                // Round to precision or to integer
+                if (this.config[0] === "FVAUTOINT") {
+                    v = Math.round(v);
+                } else if (this.options.precision !== undefined) {
+                    const precision = Math.pow(10, this.options.precision);
+                    v = Math.round(v * precision) / precision;
+                }
+
+                this.value = v;
+                if (this.callback) {
+                    this.callback(this.value);
+                }
+
+                node.graph.setDirtyCanvas(true, false);
+                return true;
+            }
         }
 
         // Start dragging
@@ -250,38 +290,74 @@ function mouseAutoAnnotated(event, [x, y], node) {
     } else if (event.type === "pointerup") {
         // Handle click on value area
         if (event.click_time < 200 && delta === 0 && !this.isAuto) {
-            const d_callback = (v) => {
-                this.value = this.parseValue?.(v) ?? Number(v);
+            if (this.config[0] === "FVAUTOCOMBO") {
+                // Get the combo options from widget options
+                const options = this.options.values || [];
 
-                // Apply min/max constraints
-                if (this.options.min != null) {
-                    this.value = Math.max(this.options.min, this.value);
-                }
-                if (this.options.max != null) {
-                    this.value = Math.min(this.options.max, this.value);
-                }
+                // Create menu items
+                const menuItems = options.map(opt => {
+                    // Handle both string options and {value, label} objects
+                    const value = typeof opt === 'object' ? opt.value : opt;
+                    const label = typeof opt === 'object' ? opt.label : opt.toString();
 
-                // Round to precision or to integer
-                if (this.type === "FVAUTOINT") {
-                    this.value = Math.round(this.value);
-                } else if (this.options.precision !== undefined) {
-                    const precision = Math.pow(10, this.options.precision);
-                    this.value = Math.round(this.value * precision) / precision;
-                }
+                    return {
+                        content: label,
+                        callback: () => {
+                            this.value = value;
 
-                if (this.callback) {
-                    this.callback(this.value);
-                }
+                            if (this.callback) {
+                                this.callback(this.value);
+                            }
 
-                node.graph.setDirtyCanvas(true, false);
-            };
+                            node.graph.setDirtyCanvas(true, false);
+                        }
+                    };
+                });
 
-            const dialog = app.canvas.prompt(
-                'Value',
-                this.value,
-                d_callback,
-                event
-            );
+                // Show the context menu
+                new LiteGraph.ContextMenu(menuItems, {
+                    event: event,
+                    title: null,
+                    callback: null,
+                    extra: node
+                });
+
+                return true;
+            } else {
+                // Original prompt for other types
+                const d_callback = (v) => {
+                    this.value = this.parseValue?.(v) ?? Number(v);
+
+                    // Apply min/max constraints
+                    if (this.options.min != null) {
+                        this.value = Math.max(this.options.min, this.value);
+                    }
+                    if (this.options.max != null) {
+                        this.value = Math.min(this.options.max, this.value);
+                    }
+
+                    // Round to precision or to integer
+                    if (this.config[0] === "FVAUTOINT") {
+                        this.value = Math.round(this.value);
+                    } else if (this.options.precision !== undefined) {
+                        const precision = Math.pow(10, this.options.precision);
+                        this.value = Math.round(this.value * precision) / precision;
+                    }
+
+                    if (this.callback) {
+                        this.callback(this.value);
+                    }
+
+                    node.graph.setDirtyCanvas(true, false);
+                };
+
+                const dialog = app.canvas.prompt(
+                    'Value',
+                    this.value,
+                    d_callback,
+                    event
+                );
+            }
 
             return true;
         }
@@ -312,16 +388,20 @@ function makeAutoAnnotated(widget, inputData) {
         type: "BOOLEAN", // This is important - matches VHS.core.js approach
         draw: drawAutoAnnotated,
         mouse: mouseAutoAnnotated,
-        isAuto: true,
-        cachedValue: widget.value,
+        isAuto: true, // Default to AUTO mode
+        cachedValue: widget.value, // Store the original value
         captureInput: false,
         last_x: 0,
         computeSize(width) {
             return [width, 20];
         },
         displayValue: function () {
-            if (this.type === "FVAUTOINT") {
+            console.log("THIS TYPE THIS!", this.type)
+            if (this.config[0] === "FVAUTOINT") {
                 return Math.round(this.value).toString();
+            }
+            if (this.config[0] === "FVAUTOCOMBO") {
+                return this.value;
             }
             // For FLOAT values, check if it's actually an integer
             if (Number.isInteger(this.value)) {
@@ -340,13 +420,15 @@ function makeAutoAnnotated(widget, inputData) {
             return this.isAuto ? -99999 : this.value;
         },
         deserializeValue: function (data) {
-            // Since we're only serializing the value, we need to handle deserialization differently
+            console.log("DESERIALIZE DATA", data)
+            // Check for the special AUTO value
             if (data === -99999) {
                 this.isAuto = true;
-                // Keep the current value
+                this.value = -99999; // Special value for AUTO mode
             } else {
                 this.isAuto = false;
                 this.value = data;
+                this.cachedValue = data;
             }
         },
         config: inputData,
@@ -357,7 +439,7 @@ function makeAutoAnnotated(widget, inputData) {
     // Override callback to handle AUTO mode
     widget.callback = function (v) {
         if (this.isAuto) {
-            return;
+            return; // Don't call the original callback in AUTO mode
         }
         return original.callback?.call(this, v);
     };
@@ -375,7 +457,8 @@ app.registerExtension({
     async beforeRegisterNodeDef(nodeType, nodeData, app) {
         console.log("beforeRegisterNodeDef called for", nodeData?.name);
 
-        if (nodeData?.name === "VideoGenerator" || nodeData?.name === "VAEConfig" || nodeData?.name === "VAE Config") {
+        if ( nodeData?.name === "InferenceArgs" || nodeData?.name === "VAEConfig" || 
+            nodeData?.name === "TextEncoderConfig" || nodeData?.name === "DITConfig") {
             console.log("Found VideoGenerator node, adding serialization support");
 
             // Add serialization support
@@ -390,10 +473,25 @@ app.registerExtension({
                     info.widgets_values = {};
                 }
 
+                // Store AUTO widget states in a separate property
+                if (!info.auto_widget_states) {
+                    info.auto_widget_states = {};
+                }
+
                 // Handle AUTO widgets specially
                 for (const w of this.widgets) {
                     if (w.type === "BOOLEAN" && w.isAuto !== undefined) {
+                        // Store the serialized value (for Python node)
+                        console.log(`Serializing widget ${w.name}: isAuto=${w.isAuto}, value=${w.value}, serialized=${w.serializeValue()}`);
                         info.widgets_values[w.name] = w.serializeValue();
+
+                        // Store the full state (for UI restoration)
+                        info.auto_widget_states[w.name] = {
+                            isAuto: w.isAuto,
+                            value: w.value,
+                            cachedValue: w.cachedValue
+                        };
+                        console.log(`Stored full state for ${w.name}:`, info.auto_widget_states[w.name]);
                     }
                 }
             });
@@ -401,15 +499,47 @@ app.registerExtension({
             // Add deserialization support
             chainCallback(nodeType.prototype, "onConfigure", function (info) {
                 console.log("VideoGenerator onConfigure called");
-                if (!this.widgets || !info.widgets_values) {
+
+                if (!this.widgets) {
+                    console.log("No widgets found on node");
                     return;
                 }
 
-                // Handle AUTO widgets specially
-                for (const w of this.widgets) {
-                    if (w.type === "BOOLEAN" && w.isAuto !== undefined && w.name in info.widgets_values) {
-                        w.deserializeValue(info.widgets_values[w.name]);
-                        w.callback?.(w.value);
+                // First, restore from widgets_values (for backward compatibility)
+                if (info.widgets_values && Array.isArray(info.widgets_values)) {
+                    console.log("Restoring from widgets_values array");
+
+                    // Match by index
+                    for (let i = 0; i < this.widgets.length && i < info.widgets_values.length; i++) {
+                        const w = this.widgets[i];
+                        const value = info.widgets_values[i];
+
+                        console.log(`Checking widget at index ${i}: ${w.name}, type=${w.type}, isAuto=${w.isAuto}, value=${value}`);
+
+                        if (w.type === "BOOLEAN" && w.isAuto !== undefined) {
+                            console.log(`Deserializing AUTO widget ${w.name} with value ${value}`);
+                            w.deserializeValue(value);
+                            console.log(`After basic deserialization: isAuto=${w.isAuto}, value=${w.value}`);
+                        }
+                    }
+                }
+
+                // Then, restore full state if available
+                if (info.auto_widget_states) {
+                    console.log("Restoring from auto_widget_states");
+
+                    for (const w of this.widgets) {
+                        if (w.type === "BOOLEAN" && w.isAuto !== undefined && w.name in info.auto_widget_states) {
+                            const state = info.auto_widget_states[w.name];
+                            console.log(`Restoring full state for ${w.name}:`, state);
+
+                            w.isAuto = state.isAuto;
+                            w.cachedValue = state.cachedValue;
+                            w.value = state.isAuto ? -99999 : state.value;
+
+                            console.log(`After full state restoration: isAuto=${w.isAuto}, value=${w.value}, cachedValue=${w.cachedValue}`);
+                            w.callback?.(w.value);
+                        }
                     }
                 }
 
@@ -440,10 +570,18 @@ app.registerExtension({
 
                 // Convert any existing widgets to AUTO widgets if needed
                 let new_widgets = [];
+                const intWidgetNames = ["height", "width", "num_frames", "num_inference_steps", "flow_shift", "seed", "fps", "scale_factor", "sp"]
+                const floatWidgetNames = ["guidance_scale"]
+                const comboWidgetNames = ["precision", "tiling"]
+
                 if (this.widgets) {
                     for (let w of this.widgets) {
-                        if (w.name === "scale_factor") {
-                            new_widgets.push(makeAutoAnnotated(w, ["FVAUTOINT", { default: 8, autoDefault: 'auto' }]));
+                        if (intWidgetNames.includes(w.name)) {
+                            new_widgets.push(makeAutoAnnotated(w, ["FVAUTOINT", { "default": 0 }]));
+                        } else if (floatWidgetNames.includes(w.name)) {
+                            new_widgets.push(makeAutoAnnotated(w, ["FVAUTOFLOAT", { "default": 0 }]));
+                        } else if (comboWidgetNames.includes(w.name)) {
+                            new_widgets.push(makeAutoAnnotated(w, ["FVAUTOCOMBO", { "default": 0 }]));
                         } else {
                             new_widgets.push(w);
                         }
@@ -455,24 +593,24 @@ app.registerExtension({
                     console.log("After conversion, found AUTO widgets:", autoWidgets.length);
                 }
 
-                const originalAddInput = this.addInput;
-                this.addInput = function (name, type, options) {
-                    if (options.widget) {
-                        // Is Converted Widget
-                        const widget = this.widgets.find((w) => w.name == name);
-                        if (widget?.config) {
-                            // Has override for type
-                            type = widget.config[0];
-                            if (type == 'FVAUTO') {
-                                type = "FLOAT,INT";
-                            } else if (type == 'FVAUTOINT') {
-                                type = "INT";
-                            }
-                            setWidgetConfig(options, widget.config);
-                        }
-                    }
-                    return originalAddInput.apply(this, [name, type, options]);
-                };
+                // const originalAddInput = this.addInput;
+                // this.addInput = function (name, type, options) {
+                //     if (options.widget) {
+                //         // Is Converted Widget
+                //         const widget = this.widgets.find((w) => w.name == name);
+                //         if (widget?.config) {
+                //             // Has override for type
+                //             type = widget.config[0];
+                //             if (type == 'FVAUTO') {
+                //                 type = "FLOAT,INT";
+                //             } else if (type == 'FVAUTOINT') {
+                //                 type = "INT";
+                //             }
+                //             setWidgetConfig(options, widget.config);
+                //         }
+                //     }
+                //     return originalAddInput.apply(this, [name, type, options]);
+                // };
 
                 // Force a redraw
                 this.graph?.setDirtyCanvas(true, true);
@@ -480,47 +618,47 @@ app.registerExtension({
         }
     },
 
-    async getCustomWidgets() {
-        console.log("getCustomWidgets called for FastVideo.AutoWidgets");
-        return {
-            FVAUTO(node, inputName, inputData) {
-                console.log("Creating FVAUTO widget for", inputName, inputData);
+    // async getCustomWidgets() {
+    //     console.log("getCustomWidgets called for FastVideo.AutoWidgets");
+    //     return {
+    //         FVAUTOFLOAT(node, inputName, inputData) {
+    //             console.log("Creating FVAUTOFLOAT widget for", inputName, inputData);
 
-                // Create a standard FLOAT widget
-                const widget = {
-                    name: inputName,
-                    type: "number",
-                    value: inputData[1]?.default || 0,
-                    options: inputData[1] || {},
-                    callback: function (v) {
-                        node.properties[inputName] = v;
-                        node.graph?.setDirtyCanvas(true, false);
-                    }
-                };
+    //             // Create a standard FLOAT widget
+    //             const widget = {
+    //                 name: inputName,
+    //                 type: "number",
+    //                 value: inputData[1]?.default || 0,
+    //                 options: inputData[1] || {},
+    //                 callback: function (v) {
+    //                     node.properties[inputName] = v;
+    //                     node.graph?.setDirtyCanvas(true, false);
+    //                 }
+    //             };
 
-                // Convert to AUTO widget
-                return makeAutoAnnotated(widget, inputData);
-            },
-            FVAUTOINT(node, inputName, inputData) {
-                console.log("Creating FVAUTOINT widget for", inputName, inputData);
+    //             // Convert to AUTO widget
+    //             return makeAutoAnnotated(widget, inputData);
+    //         },
+    //         FVAUTOINT(node, inputName, inputData) {
+    //             console.log("Creating FVAUTOINT widget for", inputName, inputData);
 
-                // Create a standard INT widget
-                const widget = {
-                    name: inputName,
-                    type: "number",
-                    value: inputData[1]?.default || 0,
-                    options: Object.assign({}, inputData[1] || {}, { precision: 0 }),
-                    callback: function (v) {
-                        node.properties[inputName] = Math.round(v);
-                        node.graph?.setDirtyCanvas(true, false);
-                    }
-                };
+    //             // Create a standard INT widget
+    //             const widget = {
+    //                 name: inputName,
+    //                 type: "number",
+    //                 value: inputData[1]?.default || 0,
+    //                 options: Object.assign({}, inputData[1] || {}, { precision: 0 }),
+    //                 callback: function (v) {
+    //                     node.properties[inputName] = Math.round(v);
+    //                     node.graph?.setDirtyCanvas(true, false);
+    //                 }
+    //             };
 
-                // Convert to AUTO widget
-                return makeAutoAnnotated(widget, inputData);
-            }
-        };
-    },
+    //             // Convert to AUTO widget
+    //             return makeAutoAnnotated(widget, inputData);
+    //         }
+    //     };
+    // },
 
     async setup() {
         console.log("FastVideo.AutoWidgets setup called");

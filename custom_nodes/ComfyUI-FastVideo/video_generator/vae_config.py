@@ -5,8 +5,8 @@ class VAEConfig:
             "optional": {
                 "scale_factor": ("INT", {"default": 8}),
                 "sp": ("INT", {"default": True}),
-                "tiling": ("BOOLEAN", {"default": True}),
-                "precision": ([None, "fp16", "bf16"], {}),
+                "tiling": ([True, False], {"default": True}),
+                "precision": (["fp16", "bf16"], {"default": "fp16"}),
             }
         }
 

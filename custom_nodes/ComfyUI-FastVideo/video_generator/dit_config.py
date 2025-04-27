@@ -3,7 +3,7 @@ class DITConfig:
     def INPUT_TYPES(cls):
         return {
             "optional": {
-                "precision": ("STRING", {"default": "fp16"}),
+                "precision": (["auto", "fp16", "bf16"], {}),
             }
         }
 
