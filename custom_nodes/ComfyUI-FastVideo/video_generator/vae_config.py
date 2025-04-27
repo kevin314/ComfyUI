@@ -4,7 +4,7 @@ class VAEConfig:
         return {
             "optional": {
                 "scale_factor": ("INT", {"default": 8}),
-                "sp": ("INT", {"default": True}),
+                "vae_sp": ([True, False], {"default": True}),
                 "tiling": ([True, False], {"default": True}),
                 "precision": (["fp16", "bf16"], {"default": "fp16"}),
             }
@@ -31,20 +31,20 @@ class VAEConfig:
 
     def set_args(
         self,
-        scale_factor=None,
-        sp=None,
-        tiling=None,
-        precision=None
+        scale_factor,
+        vae_sp,
+        tiling,
+        precision
     ):
-        # Use default values if None or "auto" is provided
-        if scale_factor == -99999:
-            scale_factor = None
+        def auto_to_none(value):
+            return None if value == -99999 else value
         
         args = {
-            "scale_factor": scale_factor,
-            "sp": sp if sp is not None else True,
-            "tiling": tiling if tiling is not None else True,
-            "precision": precision,
+            "scale_factor": auto_to_none(scale_factor),
+            "vae_sp": auto_to_none(vae_sp),
+            "tiling": auto_to_none(tiling),
+            "precision": auto_to_none(precision),
         }
+        
         print('vae args', args)
         return(args,)

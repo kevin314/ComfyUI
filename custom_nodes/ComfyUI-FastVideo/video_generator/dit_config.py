@@ -3,9 +3,16 @@ class DITConfig:
     def INPUT_TYPES(cls):
         return {
             "optional": {
-                "precision": (["auto", "fp16", "bf16"], {}),
+                "precision": (["fp16", "bf16"], {"default": "fp16"}),
             }
         }
+    
+    @classmethod
+    def VALIDATE_INPUTS(cls, precision, **kwargs):
+        # Handle None value for scale_factor
+        if precision == -99999 or precision == None:
+            # This is valid - we'll use the default value in the set_args method
+            return True
 
     RETURN_TYPES = ("DIT_CONFIG",)
     RETURN_NAMES = ("dit_config",)
@@ -16,7 +23,12 @@ class DITConfig:
         self,
         precision
     ):
+        def auto_to_none(value):
+            return None if value == -99999 else value
+
         args = {
-            "precision": precision,
+            "precision": auto_to_none(precision),
         }
+
+        print('dit args', args)
         return(args,)

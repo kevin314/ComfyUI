@@ -28,7 +28,6 @@ class VideoGenerator:
                 "embedded_cfg_scale": ("FLOAT", {"default": 6.0}),
                 "sp_size": ("INT", {"default": 2}),
                 "tp_size": ("INT", {"default": 2}),
-                "vae_sp": ("BOOLEAN", {"default": True})
             },
             "optional": {
                 "vae_config": ("VAE_CONFIG",),
@@ -60,9 +59,6 @@ class VideoGenerator:
 
     def launch_inference(
         self,
-        inference_args,
-        text_encoder_config,
-        dit_config,
         prompt,
         output_path,
         num_gpus,
@@ -71,13 +67,12 @@ class VideoGenerator:
         embedded_cfg_scale,
         sp_size,
         tp_size,
-        vae_sp,
+        inference_args=None,
         vae_config=None,
+        text_encoder_config=None,
+        dit_config=None,
         #test
-    ):
-        print('inference_argsx', inference_args)
-        #print("testx", test)
-        
+    ):        
         current_env = os.environ.copy()
         python_executable = sys.executable
 

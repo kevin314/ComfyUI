@@ -570,9 +570,9 @@ app.registerExtension({
 
                 // Convert any existing widgets to AUTO widgets if needed
                 let new_widgets = [];
-                const intWidgetNames = ["height", "width", "num_frames", "num_inference_steps", "flow_shift", "seed", "fps", "scale_factor", "sp"]
+                const intWidgetNames = ["height", "width", "num_frames", "num_inference_steps", "flow_shift", "seed", "fps", "scale_factor",]
                 const floatWidgetNames = ["guidance_scale"]
-                const comboWidgetNames = ["precision", "tiling"]
+                const comboWidgetNames = ["precision", "tiling", "vae_sp"]
 
                 if (this.widgets) {
                     for (let w of this.widgets) {
